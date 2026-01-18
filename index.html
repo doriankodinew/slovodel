@@ -330,6 +330,19 @@
             #board { max-height: calc(100dvh - 200px); }
             .key { height: 40px; }
         }
+
+/* Убираем оформление у кнопки с лампочкой */
+header button, 
+#hint-btn, 
+.hint-button {
+    border: none !important;         /* Убирает основную рамку */
+    outline: none !important;        /* Убирает контур при клике (focus) */
+    box-shadow: none !important;     /* Убирает тени, которые могут выглядеть как обводка */
+    background: transparent !important; /* Делает фон прозрачным */
+    padding: 0 !important;           /* Убирает внутренние отступы, если нужно */
+    -webkit-tap-highlight-color: transparent; /* Убирает синюю вспышку при нажатии на мобильных */
+}
+		
     </style>
 </head>
 <body>
