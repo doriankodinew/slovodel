@@ -294,8 +294,8 @@
         const DATA_URL = 'slovodel_words.json';
 
         // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ДАННЫХ ---
-        let allWordsSet = new Set(); // Для проверки существования (быстрый поиск)
-        let secretWords = [];        // Для загадывания (только secret: true)
+        let allWordsSet = new Set(); 
+        let secretWords = [];        
         
         // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ИГРЫ ---
         const WORD_LENGTH = 5;
@@ -320,19 +320,14 @@
             initTheme();
             
             try {
-                // Загружаем JSON с сервера
                 const response = await fetch(DATA_URL);
                 if (!response.ok) throw new Error("Не удалось загрузить словарь");
                 
                 const data = await response.json();
 
-                // Обрабатываем данные из формата [{"word": "...", "secret": true/false}]
                 data.forEach(item => {
-                    // Добавляем в общий сет для проверки валидности
                     if (item.word && item.word.length === WORD_LENGTH) {
                         allWordsSet.add(item.word);
-                        
-                        // Если слово можно загадывать - добавляем в список секретных
                         if (item.secret) {
                             secretWords.push(item.word);
                         }
@@ -385,7 +380,6 @@
             isGameOver = false;
             isAnimating = false;
             
-            // Выбираем случайное слово ТОЛЬКО из списка secretWords
             if (secretWords.length > 0) {
                 targetWord = secretWords[Math.floor(Math.random() * secretWords.length)];
                 console.log("Загадано (для теста):", targetWord); 
@@ -393,7 +387,6 @@
                 alert("В словаре нет слов с пометкой secret: true!");
             }
 
-            // Очистка UI
             const tiles = document.querySelectorAll(".tile");
             tiles.forEach(tile => {
                 tile.textContent = "";
@@ -468,9 +461,14 @@
         function handlePress(key) {
             if (isGameOver || isAnimating || !isDataLoaded) return;
             const currentGuess = guesses[currentRow];
+            
+            // Если букв меньше 5, добавляем
             if (currentGuess.length < WORD_LENGTH) {
                 currentGuess.push(key);
                 updateGrid();
+                if (currentGuess.length === WORD_LENGTH) {
+                    setTimeout(submitGuess, 100); // Небольшая задержка для визуала
+                }
             }
         }
 
@@ -486,7 +484,6 @@
             const currentGuessArr = guesses[currentRow];
             let hintIndex = -1;
             
-            // Ищем первую букву, которая не совпадает или отсутствует
             for (let i = 0; i < WORD_LENGTH; i++) {
                 if (!currentGuessArr[i] || currentGuessArr[i] !== targetWord[i]) {
                     hintIndex = i;
@@ -495,10 +492,12 @@
             }
             
             if (hintIndex !== -1) {
-                // Вставляем правильную букву
                 currentGuessArr[hintIndex] = targetWord[hintIndex];
                 guesses[currentRow] = currentGuessArr.slice(0, hintIndex + 1);
                 updateGrid();
+                if (guesses[currentRow].length === WORD_LENGTH) {
+                    setTimeout(submitGuess, 100);
+                }
             } 
         }
 
@@ -507,28 +506,26 @@
             const currentGuessArr = guesses[currentRow];
             const currentWord = currentGuessArr.join("");
 
-            // 1. Проверка длины
             if (currentGuessArr.length !== WORD_LENGTH) {
                 showMessage("Мало букв");
                 shakeRow();
                 return;
             }
 
-            // 2. Проверка наличия в словаре (Используем allWordsSet)
+            // Проверка словаря (новый функционал)
             if (!allWordsSet.has(currentWord)) {
                 showMessage("Такого слова нет");
                 shakeRow();
                 
-                // ЗАДАЧА: Стираем слово, если его нет в списке
+                // Стираем слово, если его нет
                 setTimeout(() => {
-                    guesses[currentRow] = []; // Очищаем массив текущей попытки
-                    updateGrid();             // Обновляем отображение
-                }, 600); // Ждем окончания анимации тряски (0.5с) + небольшой запас
+                    guesses[currentRow] = []; 
+                    updateGrid();             
+                }, 600); 
                 
                 return;
             }
 
-            // 3. Если слово валидное - проверяем буквы
             flipTiles(currentWord);
         }
 
@@ -539,7 +536,7 @@
                 const tile = row.children[i];
                 const letter = currentGuess[i];
                 tile.textContent = letter || "";
-                tile.removeAttribute("data-state"); // Сброс состояния для анимаций
+                tile.removeAttribute("data-state");
                 if (letter) {
                     tile.setAttribute("data-state", "filled");
                 }
@@ -549,11 +546,11 @@
         function shakeRow() {
             const row = board.children[currentRow];
             row.classList.remove("shake");
-            void row.offsetWidth; // Триггер reflow для перезапуска анимации
+            void row.offsetWidth;
             row.classList.add("shake");
         }
 
-        // --- АНИМАЦИЯ И ПРОВЕРКА РЕЗУЛЬТАТА ---
+        // --- АНИМАЦИЯ ---
         function flipTiles(guess) {
             isAnimating = true;
             const row = board.children[currentRow];
@@ -561,15 +558,13 @@
             const guessLetters = guess.split("");
             const states = Array(5).fill("absent");
 
-            // Сначала помечаем точные совпадения (зеленые)
             guessLetters.forEach((letter, i) => {
                 if (targetLetters[i] === letter) {
                     states[i] = "correct";
-                    targetLetters[i] = null; // Убираем, чтобы не посчитать желтым
+                    targetLetters[i] = null;
                 }
             });
 
-            // Затем помечаем присутствующие (желтые)
             guessLetters.forEach((letter, i) => {
                 if (states[i] === "correct") return;
                 const indexInTarget = targetLetters.indexOf(letter);
@@ -579,7 +574,6 @@
                 }
             });
 
-            // Запуск анимации переворота
             guessLetters.forEach((letter, i) => {
                 const tile = row.children[i];
                 setTimeout(() => {
@@ -589,13 +583,11 @@
                 }, i * 250);
             });
 
-            // После завершения всех анимаций
             setTimeout(() => {
                 isAnimating = false;
                 if (guess === targetWord) {
                     showMessage("Победа! 🏆", 2500);
                     isGameOver = true;
-                    // setTimeout(startNewGame, 3000); // Раскомментируйте для авто-рестарта
                 } else if (currentRow === 5) {
                     showMessage(`Вы проиграли. Слово: ${targetWord.toUpperCase()}`, -1);
                     isGameOver = true;
@@ -633,7 +625,6 @@
             }
         }
 
-        // --- СЛУШАТЕЛИ СОБЫТИЙ ---
         document.addEventListener("keydown", (e) => {
             if (isGameOver || isAnimating || !isDataLoaded) return;
             const key = e.key.toLowerCase();
@@ -642,7 +633,6 @@
             if (/^[а-яё]$/.test(key)) { handlePress(key); }
         });
 
-        // Запуск
         init();
     </script>
 </body>
