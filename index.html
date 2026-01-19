@@ -309,7 +309,7 @@
     <div id="message-container"></div>
 
     <div id="board-container">
-        <div id="board">Загрузка словаря...</div>
+        <div id="board"></div>
     </div>
 
     <div id="keyboard"></div>
@@ -425,10 +425,6 @@
             });
 
             document.getElementById("message-container").innerHTML = "";
-            
-            if (!isFirstLoad) {
-                showMessage("Новая игра", 1000);
-            }
         }
 
         function createBoard() {
