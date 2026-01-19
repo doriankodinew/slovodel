@@ -527,26 +527,21 @@
             const currentGuessArr = guesses[currentRow];
             const currentWord = currentGuessArr.join("");
 
+            // 1. Проверка длины
             if (currentGuessArr.length !== WORD_LENGTH) {
                 showMessage("Мало букв");
                 shakeRow();
                 return;
             }
 
-            // Проверка словаря (новый функционал)
+            // 2. Проверка наличия в словаре
             if (!allWordsSet.has(currentWord)) {
                 showMessage("Такого слова нет");
                 shakeRow();
-                
-                // Стираем слово, если его нет
-                setTimeout(() => {
-                    guesses[currentRow] = []; 
-                    updateGrid();             
-                }, 600); 
-                
                 return;
             }
 
+            // 3. Если всё ок — проверяем
             flipTiles(currentWord);
         }
 
