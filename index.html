@@ -6,33 +6,8 @@
 
 <title>СЛОВОДЕЛ — словесная игра на русском | Играть онлайн бесплатно</title>
 
-<meta name="description" content="СЛОВОДЕЛ — словесная игра на русском языке. Угадай слово из 5 букв за 6 попыток. Ежедневная головоломка онлайн. Играй бесплатно без регистрации!">
-<meta name="keywords" content="словодел, угадай слово, словесная игра, игра со словами, головоломка, игра на русском, слово из 5 букв">
-
-<meta property="og:type" content="website">
-<meta property="og:title" content="СЛОВОДЕЛ — словесная игра на русском языке">
-<meta property="og:description" content="Угадай слово из 5 букв за 6 попыток. Ежедневная словесная головоломка!">
-<meta property="og:url" content="https://slovodel.onrender.com/">
-<meta property="og:locale" content="ru_RU">
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="СЛОВОДЕЛ — словесная игра на русском">
-<meta name="twitter:description" content="Угадай слово из 5 букв за 6 попыток. Играй бесплатно!">
-<meta name="twitter:image" content="https://slovodel.onrender.com/twitter-image.jpg">
-
-<meta name="author" content="Dorian">
-<meta name="robots" content="index, follow">
-<meta name="language" content="Russian">
-
-<link rel="canonical" href="https://slovodel.onrender.com/">
-
-<!-- PWA манифест -->
-<link rel="manifest" href="/manifest.json">
+<meta name="description" content="СЛОВОДЕЛ — словесная игра на русском языке. Угадай слово из 5 букв за 6 попыток.">
 <meta name="theme-color" content="#4a6cf7">
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="СЛОВОДЕЛ">
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&display=swap');
@@ -41,6 +16,8 @@
         /* --- СВЕТЛАЯ ТЕМА --- */
         --bg-color: #ffffff;
         --text-main: #202020;
+        --modal-bg: #ffffff;
+        --modal-overlay: rgba(0, 0, 0, 0.5);
         
         --tile-absent: #787c7e;
         --tile-correct: #6aaa64;
@@ -55,12 +32,15 @@
 
         --header-border: #eee;
         --header-height: 50px;
+        --btn-hover: #f0f0f0;
     }
 
     /* --- ТЕМНАЯ ТЕМА --- */
     body.dark-mode {
         --bg-color: #121213;
         --text-main: #ffffff;
+        --modal-bg: #121213;
+        --modal-overlay: rgba(255, 255, 255, 0.1);
         
         --tile-absent: #3a3a3c;
         --tile-correct: #538d4e;
@@ -74,6 +54,7 @@
         --tile-text-filled: #ffffff;
 
         --header-border: #3a3a3c;
+        --btn-hover: #2c2c2e;
     }
 
     * { box-sizing: border-box; }
@@ -99,6 +80,8 @@
         align-items: center;
         justify-content: center;
         width: 100%;
+		max-width: 500px;
+        margin: 0 auto;
         height: var(--header-height);
         border-bottom: 1px solid var(--header-border);
         position: relative;
@@ -112,7 +95,15 @@
         letter-spacing: 1px;
     }
 
-    .header-controls {
+    .header-left {
+        position: absolute;
+        left: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .header-right {
         position: absolute;
         right: 10px;
         display: flex;
@@ -127,20 +118,113 @@
         font-size: 20px;
         color: var(--text-main);
         padding: 5px;
-        transition: transform 0.2s;
+        border-radius: 4px;
+        transition: transform 0.2s, background-color 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
+    .icon-btn:hover { background-color: transparent; }
     .icon-btn:active { transform: scale(0.9); }
 
     .hint-btn {
         background: transparent;
         color: var(--tile-present);
         padding: 4px;
-        font-size: 16px;
+        font-size: 20px;
         cursor: pointer;
         border: none;
     }
 
     .restart-btn:hover { transform: rotate(180deg); }
+
+    /* --- МОДАЛЬНЫЕ ОКНА --- */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--modal-overlay);
+        z-index: 200;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(2px);
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+        background-color: var(--modal-bg);
+        border: 1px solid var(--header-border);
+        border-radius: 8px;
+        padding: 20px;
+        width: 90%;
+        max-width: 400px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        position: relative;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        border-bottom: 1px solid var(--header-border);
+        padding-bottom: 10px;
+    }
+    .modal-header h2 { margin: 0; font-size: 1.2rem; }
+    
+    .close-modal {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: var(--text-main);
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    .modal-body {
+        overflow-y: auto;
+        flex-grow: 1;
+    }
+
+    /* Список слов */
+    #guessed-words-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    #guessed-words-list li {
+        padding: 8px 0;
+        border-bottom: 1px solid var(--header-border);
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        display: flex;
+        justify-content: space-between;
+    }
+    #guessed-words-list li:last-child { border-bottom: none; }
+    .word-count { font-weight: bold; color: var(--tile-correct); }
+
+    /* Кнопки в модалке */
+    .danger-btn {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        font-weight: bold;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 10px;
+        font-family: inherit;
+    }
+    .danger-btn:active { transform: scale(0.98); }
+
+    .empty-msg { text-align: center; color: var(--tile-absent); margin-top: 20px; }
 
     /* --- СООБЩЕНИЯ --- */
     #message-container {
@@ -278,7 +362,6 @@
     .key[data-state="present"] { background-color: var(--tile-present); color: white; }
     .key[data-state="absent"] { background-color: var(--tile-absent); color: white; }
 
-    /* Убираем лишние стили для кнопок */
     button { outline: none; }
 
     @media (max-width: 400px) {
@@ -291,13 +374,47 @@
         #board { max-height: calc(100dvh - 200px); }
         .key { height: 40px; }
     }
+	.modal-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .secondary-btn {
+        background-color: var(--key-bg); /* Используем цвет клавиш для нейтральной кнопки */
+        color: var(--text-main);
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        font-weight: bold;
+        cursor: pointer;
+        width: 100%;
+        font-family: inherit;
+        transition: opacity 0.2s;
+    }
+    
+    .secondary-btn:hover {
+        opacity: 0.8;
+    }
+    
+    /* Небольшая правка для danger-btn, чтобы убрать margin-top, 
+       так как теперь отступ задает родитель .modal-actions */
+    .modal-actions .danger-btn {
+        margin-top: 0;
+    }
 </style>
 </head>
 <body>
 
     <header>
+        <div class="header-left">
+            <button class="icon-btn" onclick="openStats()" title="Статистика">🏆</button>
+            <button class="icon-btn" onclick="openSettings()" title="Настройки">⚙️</button>
+        </div>
+        
         <h1>СЛОВОДЕЛ</h1>
-        <div class="header-controls">
+        
+        <div class="header-right">
             <button class="hint-btn" onclick="useHint()" title="Подсказка">💡</button>
             <button class="icon-btn restart-btn" onclick="startNewGame()" title="Новая игра">↻</button>
             <button class="icon-btn theme-btn" onclick="toggleTheme()" title="Сменить тему">
@@ -305,6 +422,53 @@
             </button>
         </div>
     </header>
+
+    <!-- Модальное окно Статистики -->
+    <div id="stats-modal-overlay" class="modal-overlay" onclick="closeModal(event, 'stats-modal-overlay')">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Угаданные слова</h2>
+                <button class="close-modal" onclick="closeModal(null, 'stats-modal-overlay')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <ul id="guessed-words-list">
+                    <!-- Список будет здесь -->
+                </ul>
+                <div id="empty-stats-msg" class="empty-msg">Вы пока не угадали ни одного слова.</div>
+            </div>
+        </div>
+    </div>
+	<!-- Модальное окно Подтверждения -->
+    <div id="confirm-modal-overlay" class="modal-overlay" onclick="closeModal(event, 'confirm-modal-overlay')">
+        <div class="modal" style="max-width: 350px;">
+            <div class="modal-header">
+                <h2>Подтверждение</h2>
+                <button class="close-modal" onclick="closeModal(null, 'confirm-modal-overlay')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить всю историю побед? Это действие нельзя отменить.</p>
+                
+                <div class="modal-actions">
+                    <button class="secondary-btn" onclick="closeModal(null, 'confirm-modal-overlay')">Отмена</button>
+                    <button class="danger-btn" onclick="performClearStats()">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно Настроек -->
+    <div id="settings-modal-overlay" class="modal-overlay" onclick="closeModal(event, 'settings-modal-overlay')">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Настройки</h2>
+                <button class="close-modal" onclick="closeModal(null, 'settings-modal-overlay')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Здесь можно сбросить прогресс игры.</p>
+                <button class="danger-btn" onclick="askToClearStats()">Очистить статистику</button>
+            </div>
+        </div>
+    </div>
 
     <div id="message-container"></div>
 
@@ -314,15 +478,9 @@
 
     <div id="keyboard"></div>
 
-    <script>
-        // --- ПУТЬ К ФАЙЛУ СЛОВАРЯ ---
+<script>
+        // --- КОНСТАНТЫ И НАСТРОЙКИ ---
         const DATA_URL = 'slovodel_words.json';
-
-        // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ДАННЫХ ---
-        let allWordsSet = new Set(); 
-        let secretWords = [];        
-        
-        // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ИГРЫ ---
         const WORD_LENGTH = 5;
         const KEYBOARD_LAYOUT = [
             "йцукенгшщзхъ",
@@ -330,19 +488,34 @@
             "ячсмитьбю"
         ];
 
+        // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
+        let allWordsSet = new Set(); 
+        let secretWords = [];        
+        
         let targetWord = "";
         let guesses = [];
         let currentRow = 0;
         let isGameOver = false;
         let isAnimating = false;
         let isDataLoaded = false;
+        
+        // Флаг: использовалась ли подсказка в текущей партии
+        let hasUsedHint = false;
+        
+        // Объект статистики
+        let gameStats = {
+            guessedWords: [] // Хранит объекты: { word: "СЛОВО", usedHint: boolean }
+        };
 
+        // --- DOM ЭЛЕМЕНТЫ ---
         const board = document.getElementById("board");
         const keyboard = document.getElementById("keyboard");
+        const messageContainer = document.getElementById("message-container");
 
-        // --- ЗАГРУЗКА ДАННЫХ И СТАРТ ---
+        // --- ИНИЦИАЛИЗАЦИЯ ---
         async function init() {
             initTheme();
+            loadStats();
             
             try {
                 const response = await fetch(DATA_URL);
@@ -370,7 +543,7 @@
             }
         }
 
-        // --- ЛОГИКА ТЕМЫ ---
+        // --- ТЕМА ОФОРМЛЕНИЯ ---
         function initTheme() {
             const savedTheme = localStorage.getItem('theme');
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -387,6 +560,7 @@
             const body = document.body;
             body.classList.toggle('dark-mode');
             const icon = document.getElementById('theme-icon');
+            
             if (body.classList.contains('dark-mode')) {
                 icon.textContent = '☀️';
                 localStorage.setItem('theme', 'dark');
@@ -396,10 +570,88 @@
             }
         }
 
-        // --- УПРАВЛЕНИЕ ИГРОЙ ---
+        // --- СТАТИСТИКА ---
+        function loadStats() {
+            const savedStats = localStorage.getItem('slovodel_stats');
+            if (savedStats) {
+                try {
+                    gameStats = JSON.parse(savedStats);
+                    if (!gameStats.guessedWords) gameStats.guessedWords = [];
+                } catch (e) {
+                    console.error("Ошибка чтения статистики", e);
+                    gameStats.guessedWords = [];
+                }
+            }
+        }
+
+        function saveWin(word) {
+            const winData = {
+                word: word,
+                usedHint: hasUsedHint
+            };
+            gameStats.guessedWords.unshift(winData);
+            localStorage.setItem('slovodel_stats', JSON.stringify(gameStats));
+        }
+
+        function askToClearStats() {
+            document.getElementById('settings-modal-overlay').classList.remove('open');
+            document.getElementById('confirm-modal-overlay').classList.add('open');
+        }
+
+        function performClearStats() {
+            gameStats.guessedWords = [];
+            localStorage.removeItem('slovodel_stats');
+            showMessage("Статистика очищена");
+            document.getElementById('confirm-modal-overlay').classList.remove('open');
+        }
+
+        // --- МОДАЛЬНЫЕ ОКНА ---
+        function openStats() {
+            const list = document.getElementById('guessed-words-list');
+            const emptyMsg = document.getElementById('empty-stats-msg');
+            list.innerHTML = '';
+
+            if (gameStats.guessedWords.length === 0) {
+                emptyMsg.style.display = 'block';
+            } else {
+                emptyMsg.style.display = 'none';
+                
+                gameStats.guessedWords.forEach((item, index) => {
+                    const li = document.createElement('li');
+                    const count = gameStats.guessedWords.length - index;
+                    
+                    // Логика иконки: Лампочка если была подсказка, Кубок если честно
+                    const iconDisplay = item.usedHint ? "💡" : "🏆";
+                    const titleText = item.usedHint ? "С подсказкой" : "Честная победа";
+
+                    li.innerHTML = `
+                        <span>${item.word}</span> 
+                        <div style="display: flex; align-items: center;">
+                            <span class="word-count">#${count}</span>
+                            <span style="margin-left: 8px; font-size: 0.8em; cursor: help;" title="${titleText}">${iconDisplay}</span>
+                        </div>
+                    `;
+                    list.appendChild(li);
+                });
+            }
+            document.getElementById('stats-modal-overlay').classList.add('open');
+        }
+
+        function openSettings() {
+            document.getElementById('settings-modal-overlay').classList.add('open');
+        }
+
+        function closeModal(event, id) {
+            if (!event || event.target.id === id) {
+                document.getElementById(id).classList.remove('open');
+            }
+        }
+
+        // --- ИГРОВОЙ ПРОЦЕСС ---
         function startNewGame(isFirstLoad = false) {
             if (!isDataLoaded) return;
 
+            hasUsedHint = false; // Сброс флага подсказки
             currentRow = 0;
             guesses = [[], [], [], [], [], []];
             isGameOver = false;
@@ -407,24 +659,23 @@
             
             if (secretWords.length > 0) {
                 targetWord = secretWords[Math.floor(Math.random() * secretWords.length)];
-                console.log("Загадано (для теста):", targetWord); 
+                console.log("Загадано:", targetWord); 
             } else {
-                alert("В словаре нет слов с пометкой secret: true!");
+                alert("Ошибка: нет секретных слов!");
             }
 
-            const tiles = document.querySelectorAll(".tile");
-            tiles.forEach(tile => {
+            // Очистка UI
+            document.querySelectorAll(".tile").forEach(tile => {
                 tile.textContent = "";
                 tile.className = "tile";
                 tile.removeAttribute("data-state");
             });
 
-            const keys = document.querySelectorAll(".key");
-            keys.forEach(key => {
+            document.querySelectorAll(".key").forEach(key => {
                 key.removeAttribute("data-state");
             });
 
-            document.getElementById("message-container").innerHTML = "";
+            messageContainer.innerHTML = "";
         }
 
         function createBoard() {
@@ -478,23 +729,26 @@
             return button;
         }
 
-        // --- ВВОД И ОБРАБОТКА ---
+        // --- ОБРАБОТКА ВВОДА ---
         function handlePress(key) {
             if (isGameOver || isAnimating || !isDataLoaded) return;
+            if (document.querySelector('.modal-overlay.open')) return;
+
             const currentGuess = guesses[currentRow];
             
-            // Если букв меньше 5, добавляем
             if (currentGuess.length < WORD_LENGTH) {
                 currentGuess.push(key);
                 updateGrid();
                 if (currentGuess.length === WORD_LENGTH) {
-                    setTimeout(submitGuess, 100); // Небольшая задержка для визуала
+                    setTimeout(submitGuess, 100); 
                 }
             }
         }
 
         function deleteLetter() {
             if (isGameOver || isAnimating) return;
+            if (document.querySelector('.modal-overlay.open')) return;
+
             const currentGuess = guesses[currentRow];
             currentGuess.pop();
             updateGrid();
@@ -502,6 +756,10 @@
 
         function useHint() {
             if (isGameOver || isAnimating || !isDataLoaded) return;
+            if (document.querySelector('.modal-overlay.open')) return;
+
+            hasUsedHint = true; // Фиксируем использование
+
             const currentGuessArr = guesses[currentRow];
             let hintIndex = -1;
             
@@ -524,24 +782,23 @@
 
         function submitGuess() {
             if (isGameOver || isAnimating) return;
+            if (document.querySelector('.modal-overlay.open')) return;
+
             const currentGuessArr = guesses[currentRow];
             const currentWord = currentGuessArr.join("");
 
-            // 1. Проверка длины
             if (currentGuessArr.length !== WORD_LENGTH) {
                 showMessage("Мало букв");
                 shakeRow();
                 return;
             }
 
-            // 2. Проверка наличия в словаре
             if (!allWordsSet.has(currentWord)) {
                 showMessage("Такого слова нет");
                 shakeRow();
                 return;
             }
 
-            // 3. Если всё ок — проверяем
             flipTiles(currentWord);
         }
 
@@ -566,7 +823,7 @@
             row.classList.add("shake");
         }
 
-        // --- АНИМАЦИЯ ---
+        // --- АНИМАЦИЯ И ПРОВЕРКА ---
         function flipTiles(guess) {
             isAnimating = true;
             const row = board.children[currentRow];
@@ -574,6 +831,7 @@
             const guessLetters = guess.split("");
             const states = Array(5).fill("absent");
 
+            // 1. Поиск точных совпадений (зеленые)
             guessLetters.forEach((letter, i) => {
                 if (targetLetters[i] === letter) {
                     states[i] = "correct";
@@ -581,6 +839,7 @@
                 }
             });
 
+            // 2. Поиск частичных совпадений (желтые)
             guessLetters.forEach((letter, i) => {
                 if (states[i] === "correct") return;
                 const indexInTarget = targetLetters.indexOf(letter);
@@ -590,6 +849,7 @@
                 }
             });
 
+            // 3. Анимация переворота
             guessLetters.forEach((letter, i) => {
                 const tile = row.children[i];
                 setTimeout(() => {
@@ -599,15 +859,14 @@
                 }, i * 250);
             });
 
+            // 4. Завершение хода
             setTimeout(() => {
                 isAnimating = false;
                 if (guess === targetWord) {
                     showMessage("Победа! 🏆", 2500);
                     isGameOver = true;
-                    
-                    // --- ВОТ ЭТА СТРОЧКА ДОБАВЛЕНА ---
+                    saveWin(targetWord);
                     setTimeout(startNewGame, 3000); 
-
                 } else if (currentRow === 5) {
                     showMessage(`Вы проиграли. Слово: ${targetWord.toUpperCase()}`, -1);
                     isGameOver = true;
@@ -632,11 +891,10 @@
         }
 
         function showMessage(text, duration = 2000) {
-            const container = document.getElementById("message-container");
             const msg = document.createElement("div");
             msg.textContent = text;
             msg.className = "message show";
-            container.prepend(msg);
+            messageContainer.prepend(msg);
             if (duration > 0) {
                 setTimeout(() => {
                     msg.classList.remove("show");
@@ -645,14 +903,25 @@
             }
         }
 
+        // --- СЛУШАТЕЛИ СОБЫТИЙ ---
         document.addEventListener("keydown", (e) => {
             if (isGameOver || isAnimating || !isDataLoaded) return;
+            
+            // Закрытие модалок по Esc
+            if (document.querySelector('.modal-overlay.open')) {
+                if (e.key === "Escape") {
+                    document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('open'));
+                }
+                return;
+            }
+
             const key = e.key.toLowerCase();
             if (key === "enter") { submitGuess(); return; }
             if (key === "backspace") { deleteLetter(); return; }
             if (/^[а-яё]$/.test(key)) { handlePress(key); }
         });
 
+        // Запуск
         init();
     </script>
 </body>
